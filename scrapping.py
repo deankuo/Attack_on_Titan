@@ -3,6 +3,7 @@
 
 import re
 import time
+from pathlib import Path
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup, NavigableString
@@ -10,7 +11,8 @@ from bs4 import BeautifulSoup, NavigableString
 BASE_URL = "https://www.springfieldspringfield.co.uk"
 LISTING_URL = f"{BASE_URL}/episode_scripts.php?tv-show=attack-on-titan-2013"
 EPISODE_URL = f"{BASE_URL}/view_episode_scripts.php?tv-show=attack-on-titan-2013&episode="
-OUTPUT_FILE = "aot_transcripts_raw.csv"
+OUTPUT_FILE = "./data/aot_transcripts_raw.csv"
+TRANSCRIPT_DIR = Path("transcript")
 DELAY = 2.5  # seconds between requests
 
 HEADERS = {
@@ -61,6 +63,11 @@ def get_transcript_lines(episode_code):
     return lines
 
 
+def save_txt(code: str, lines: list[str]) -> None:
+    TRANSCRIPT_DIR.mkdir(exist_ok=True)
+    (TRANSCRIPT_DIR / f"{code}.txt").write_text("\n".join(lines), encoding="utf-8")
+
+
 def main():
     print("Fetching episode list...")
     episodes = get_episode_list()
@@ -72,6 +79,7 @@ def main():
         try:
             lines = get_transcript_lines(code)
             print(f"         {len(lines)} lines scraped")
+            save_txt(code, lines)
             for line in lines:
                 rows.append({
                     "sentence": line,
