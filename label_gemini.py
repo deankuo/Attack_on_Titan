@@ -13,9 +13,11 @@ import json
 import time
 import pandas as pd
 import google.generativeai as genai
+from dotenv import load_dotenv
+load_dotenv()
 
-INPUT_FILE = "aot_transcripts_raw.csv"
-OUTPUT_FILE = "aot_transcripts_labeled.csv"
+INPUT_FILE = "./data/aot.csv"
+OUTPUT_FILE = "./data/aot_transcripts_labeled.csv"
 MODEL = "gemini-2.5-pro"
 BATCH_SIZE = 30   # lines per Gemini call
 DELAY = 4.0       # seconds between API calls
@@ -26,21 +28,54 @@ AOT_CHARACTERS = [
     "Eren Yeager", "Mikasa Ackerman", "Armin Arlert", "Levi Ackerman",
     "Hange Zoë", "Erwin Smith", "Jean Kirstein", "Connie Springer",
     "Sasha Blouse", "Historia Reiss", "Ymir", "Moblit Berner",
-    "Squad Leader Mike", "Floch Forster", "Isabel Magnolia", "Furlan Church",
+    "Mike Zacharias", "Floch Forster", "Isabel Magnolia", "Furlan Church",
+    "Petra Ral", "Oluo Bozado", "Eld Jinn", "Gunther Schultz",
+    "Nanaba", "Gelgar", "Ilse Langnar", "Dita Ness", "Luke Siss",
+    "Dieter Ness", "Daz", "Samuel Linke-Jackson", "Louise",
+
     # Garrison / Military Police
     "Hannes", "Dot Pixis", "Keith Shadis", "Nile Dok", "Kenny Ackerman",
+    "Boris Feulner", "Dita Ness", "Rashad",
+
     # Warriors / Marleyans
     "Reiner Braun", "Bertholdt Hoover", "Annie Leonhart",
     "Zeke Yeager", "Pieck Finger", "Porco Galliard", "Gabi Braun", "Falco Grice",
+    "Colt Grice", "Theo Magath", "Willy Tybur",
+
     # Yeager family / supporting
     "Grisha Yeager", "Carla Yeager", "Dina Fritz",
-    # Marley allies / others
-    "Yelena", "Onyankopon", "Rod Reiss", "Pastor Nick",
+    "Fay Yeager", "Zeke's grandmother",
+
+    # Royal family / Church / Walls
+    "Rod Reiss", "Uri Reiss", "Frieda Reiss", "Pastor Nick",
+    "Abel", "Flegel Reeves", "Dimo Reeves",
+
+    # Marley allies / Anti-Marleyan Volunteers
+    "Yelena", "Onyankopon",
+
+    # Azumabito / Eastern allies
+    "Kiyomi Azumabito",
+
+    # Titan shifter predecessors / flashback
+    "Tom Ksaver", "Ymir Fritz",
+    "Marcel Galliard", "Bertholdt's father",
+
+    # Paradis political / military leadership
+    "Dot Pixis", "Zachary Daz", "Nile Dok",
+    "Hitch Dreyse", "Marlowe Freudenberg",
+    "Sandra", "Gordon", "Thomas",
+
+    # 104th Cadet Corps peers
+    "Marco Bodt", "Thomas Wagner", "Mina Carolina",
+    "Nac Tius", "Mylius Zeramuski",
+
+    # Marley internment zone / Liberio
+    "Mr. Leonhart",
+
     # Special labels
-    "Narrator",     # voiceover / narration
-    "Multiple",     # line contains clearly mixed speakers
-    "crowd line",   # indistinguishable crowd / background shout
-    "Unknown",      # speaker truly cannot be determined
+    "Narrator",       # voiceover / narration
+    "Crowd",          # indistinguishable crowd / background shout
+    "Unknown",        # speaker truly cannot be determined
 ]
 # fmt: on
 
@@ -49,14 +84,16 @@ You are an expert on the anime Attack on Titan. Below are {n} dialogue lines fro
 
 Known characters: {characters}
 
-For each numbered line, identify who is most likely speaking. Follow these rules strictly:
-- Use a name exactly as written in the character list above.
-- "Narrator" → voiceover/narration with no identifiable speaker.
-- "Multiple" → the line contains more than one distinct speaker mixed together.
-- "crowd line" → indistinguishable crowd shout, battle noise, or background voices.
-- "Unknown" → you genuinely cannot identify the speaker.
+For each numbered line, identify who is MOST LIKELY speaking. Follow these rules strictly:
+- Use a name exactly as it appears in the character list above.
+- "Narrator" → formal third-person voiceover describing the world, history, or events (e.g. "Humanity was suddenly reminded…", "Over a century ago…", "An estimated X people…"). PRIORITY RULE: if a block BEGINS with or is dominated by narrator-style text, label it "Narrator" even if a short character line appears at the end.
+- "Crowd" → indistinguishable crowd noise, battle shouts, or many unnamed voices at once (NOT a back-and-forth conversation between named characters).
+- "Unknown" → you genuinely cannot determine the speaker.
+- NEVER return "Multiple". Some lines bundle several characters' dialogue together; in that case assign the character with the MOST spoken lines or the MOST PROMINENT speech in the block. If you truly cannot determine a primary speaker, use "Unknown".
 
-Return ONLY a valid JSON array of {n} strings, one per line, in the same order. No explanation, no markdown fences.
+Return ONLY a valid JSON object mapping each line number (as a string key) to the speaker name. No explanation, no markdown fences.
+
+Example: {{"1": "Eren Yeager", "2": "Narrator", "3": "Crowd", "4": "Unknown"}}
 
 Lines:
 {lines}"""
@@ -87,13 +124,23 @@ def label_episode_batch(model, season: int, episode: int, sentences: list[str]) 
                 raw = "\n".join(raw.splitlines()[1:])
                 raw = raw.rsplit("```", 1)[0].strip()
 
-            batch_labels = json.loads(raw)
+            parsed = json.loads(raw)
 
-            if len(batch_labels) != len(batch):
-                print(f"    WARNING: expected {len(batch)} labels, got {len(batch_labels)} — padding with Unknown")
-                batch_labels += ["Unknown"] * (len(batch) - len(batch_labels))
+            # Accept either the keyed-dict format {"1": "char", ...} or
+            # a fallback positional array ["char", ...] from older model outputs.
+            if isinstance(parsed, dict):
+                batch_labels = [parsed.get(str(i + 1), "Unknown") for i in range(len(batch))]
+            else:
+                batch_labels = list(parsed)
+                if len(batch_labels) != len(batch):
+                    print(f"    WARNING: expected {len(batch)} labels, got {len(batch_labels)} — padding with Unknown")
+                    batch_labels += ["Unknown"] * (len(batch) - len(batch_labels))
+                batch_labels = batch_labels[: len(batch)]
 
-            characters.extend(batch_labels[: len(batch)])
+            # Replace any residual "Multiple" labels Gemini may still produce.
+            batch_labels = ["Unknown" if lbl == "Multiple" else lbl for lbl in batch_labels]
+
+            characters.extend(batch_labels)
 
         except Exception as e:
             print(f"    ERROR on batch starting at line {start + 1}: {e}")
