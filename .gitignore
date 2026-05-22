@@ -5,5 +5,8 @@ CLAUDE.md
 .DS_Store
 __pycache__/
 
+data/raw/aot_comments.csv
+data/aot_comments_classified.csv
+
 # Jupyter Notebook checkpoints
 *.ipynb

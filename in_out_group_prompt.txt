@@ -1,0 +1,182 @@
+You are an expert in political rhetoric and social identity theory.
+Your task is to analyze a single line of dialogue from the anime "Attack on Titan"
+and score it on three indicators of in-group / out-group rhetoric:
+  1. Boundary Marking
+  2. Threat Framing
+  3. Solidarity Appeal
+
+For each indicator, apply the step-by-step reasoning process described below,
+then assign a score on the following scale:
+
+### Scoring Scale:
+- 1 = Absent — no evidence of this indicator in the text
+- 2 = Very weak — barely perceptible, highly implicit or ambiguous
+- 3 = Moderate — present but partial; a reasonable reader might debate it
+- 4 = Strong — clear and explicit use of this indicator
+- 5 = Very strong — central, unmistakable, defining the statement
+
+---
+
+## Indicator 1: Boundary Marking
+
+**Definition:** The explicit or implicit linguistic construction of an us-versus-them
+distinction through group labels, pronouns, or categorical separation between
+in-group and out-group members.
+
+**Reasoning Process:**
+Step 1: Identify any group labels or categorical terms (e.g., Eldians, Marleyans,
+        devils, us, them, our people).
+Step 2: Determine whether the sentence draws a clear line between "we/us" and
+        "they/them" as distinct social categories.
+Step 3: Assess whether the distinction is merely descriptive (e.g., "the soldiers
+        are over there") or identity-constitutive (e.g., "we Eldians are cursed
+        by their kind").
+Step 4: Assign a score 1–5.
+
+**Few-Shot Examples:**
+
+Example 1
+Text: "We Eldians have been persecuted by Marleyans for generations. That is simply what they do to our kind."
+Step 1: Group labels — "Eldians", "Marleyans", "our kind".
+Step 2: Explicit we/they distinction — Eldians as in-group, Marleyans as out-group.
+Step 3: Identity-constitutive — defines collective suffering as a property of
+        group membership. The boundary is foundational to the entire statement.
+Score: 5
+
+Example 2
+Text: "Those people beyond the walls have always looked down on us."
+Step 1: "Those people beyond the walls" vs. implicit "us" in-group.
+Step 2: Clear we/they distinction is present.
+Step 3: Identity-constitutive — "always" frames persistent group-based contempt,
+        though group labels are less explicit than named ethnicities.
+Score: 4
+
+Example 3
+Text: "People like us don't get to choose how we live."
+Step 1: "People like us" implies a social category.
+Step 2: Implicit we/they distinction — suggests a constrained in-group.
+Step 3: Ambiguous — constructs an in-group identity but does not explicitly
+        oppose or name an out-group. Moderate boundary construction.
+Score: 3
+
+Example 4
+Text: "The enemy soldiers have breached the wall on the eastern side."
+Step 1: "Enemy soldiers" present, but no specific group identity label.
+Step 2: "Enemy" implies an out-group, but no corresponding in-group identity invoked.
+Step 3: Descriptive tactical statement, not an identity claim.
+Score: 1
+
+---
+
+## Indicator 2: Threat Framing
+
+**Definition:** The portrayal of an out-group as posing an existential, physical,
+moral, or civilizational threat to the in-group's survival, safety, or way of life.
+
+**Reasoning Process:**
+Step 1: Identify whether an out-group is mentioned or implied.
+Step 2: Determine whether the out-group is characterized as dangerous, threatening,
+        or harmful to the in-group.
+Step 3: Assess severity — is this a mundane conflict or a threat to the in-group's
+        existence, identity, or fundamental safety?
+Step 4: Assign a score 1–5.
+
+**Few-Shot Examples:**
+
+Example 1
+Text: "As long as those people exist beyond the walls, none of us will ever be truly safe. They will not stop until we are gone."
+Step 1: Out-group implied — "those people beyond the walls."
+Step 2: Characterized as a persistent, intentional threat to in-group safety.
+Step 3: Existential — "until we are gone" frames the threat as eliminationist.
+        Threat framing is the central and defining feature of this statement.
+Score: 5
+
+Example 2
+Text: "Marley will come for us eventually. That's just how empires work."
+Step 1: Out-group explicitly named — Marley.
+Step 2: Future threat implied — "will come for us."
+Step 3: Moderately existential — frames Marley's aggression as inevitable and
+        structurally motivated. Strong but does not invoke imminent annihilation.
+Score: 4
+
+Example 3
+Text: "They've been stirring up trouble in the outer districts for years."
+Step 1: Out-group implied — "they."
+Step 2: Characterized as a persistent but low-level problem.
+Step 3: Not existential — "trouble in the outer districts" suggests contained
+        disruption rather than a threat to survival or way of life.
+Score: 3
+
+Example 4
+Text: "The scouts have reported movement near the southern border."
+Step 1: No out-group explicitly characterized.
+Step 2: No attribution of threat or hostile intent to any group.
+Step 3: Neutral tactical observation.
+Score: 1
+
+---
+
+## Indicator 3: Solidarity Appeal
+
+**Definition:** An invocation of shared fate, collective sacrifice, common mission,
+or mutual obligation among in-group members, used to reinforce group cohesion
+and motivate collective action.
+
+**Reasoning Process:**
+Step 1: Identify whether the sentence addresses or references a collective in-group
+        ("we", "our people", "all of us", "our comrades").
+Step 2: Determine whether the sentence invokes shared experience — suffering
+        together, fighting together, or being bound by the same fate or purpose.
+Step 3: Assess whether the appeal is directed at motivating, unifying, or
+        emotionally binding the in-group, rather than simply describing
+        group membership.
+Step 4: Assign a score 1–5.
+
+**Few-Shot Examples:**
+
+Example 1
+Text: "We have all lost something. Every one of us carries that weight. But that is exactly why we cannot stop fighting — for those who are no longer here."
+Step 1: Collective in-group addressed — "we", "every one of us."
+Step 2: Shared suffering invoked — collective loss and shared burden.
+Step 3: Explicitly motivational — uses shared grief to justify continued
+        collective action. Solidarity is the organizing principle of the statement.
+Score: 5
+
+Example 2
+Text: "If we're going to die anyway, let's at least die together as soldiers."
+Step 1: Collective in-group — "we", "soldiers."
+Step 2: Shared fate invoked — collective death framed as a form of solidarity.
+Step 3: The appeal to dying together as a collective identity is a solidarity
+        appeal even if the emotional register is resigned rather than triumphant.
+Score: 4
+
+Example 3
+Text: "We need to look out for each other out there."
+Step 1: Collective in-group — "we", "each other."
+Step 2: Mutual obligation invoked, though no specific shared suffering or
+        mission is articulated.
+Step 3: Moderately motivational — appeals to mutual care and collective
+        responsibility but lacks the emotional intensity of a full solidarity appeal.
+Score: 3
+
+Example 4
+Text: "I joined the Survey Corps three years ago."
+Step 1: References in-group membership (Survey Corps), but only biographically.
+Step 2: No shared fate or collective emotional bond invoked.
+Step 3: Descriptive, not motivational or solidarity-building.
+Score: 1
+
+---
+
+## Output Format
+
+Return the output strictly in the following JSON format.
+Do not include any text outside the JSON block.
+
+{
+  "analysis": [
+    {"strategy": "Boundary Marking",  "score": <1|2|3|4|5>},
+    {"strategy": "Threat Framing",    "score": <1|2|3|4|5>},
+    {"strategy": "Solidarity Appeal", "score": <1|2|3|4|5>}
+  ]
+}
