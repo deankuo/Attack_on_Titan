@@ -1,5 +1,5 @@
 ### 05.23.2026
-### Factor analysis of AoT GPT-mini labeled data
+### Factor analysis of AoT Qwen labeled data
 ### MD (8 indicators) + In/Out (3 indicators) FA; character/episode aggregation
 
 suppressPackageStartupMessages({
@@ -52,7 +52,7 @@ md_cols <- c(
     "md_advantageous_comparison_score",
     "md_displacement_of_responsibility_score",
     "md_diffusion_of_responsibility_score",
-    "md_disregard___distortion_of_consequences_score",
+    "md_disregard_distortion_of_consequences_score",
     "md_dehumanization_score",
     "md_attribution_of_blame_score"
 )
@@ -69,7 +69,7 @@ short_labels <- c(
     md_advantageous_comparison_score                  = "Adv. Comp.",
     md_displacement_of_responsibility_score           = "Displace.",
     md_diffusion_of_responsibility_score              = "Diffusion",
-    `md_disregard___distortion_of_consequences_score` = "Disregard",
+    md_disregard_distortion_of_consequences_score     = "Disregard",
     md_dehumanization_score                           = "Dehumanize",
     md_attribution_of_blame_score                     = "Attr. Blame",
     inout_boundary_marking_score                      = "Boundary",
@@ -83,12 +83,13 @@ df_qwen     <- read_csv("./data/aot_qwen_labeled.csv",        show_col_types = F
 df_comments <- read_csv("./data/aot_comments_classified.csv", show_col_types = FALSE)
 
 # ── Filter to successfully parsed rows with no NA scores ──────────────────────
-df_clean <- df_gpt %>%
-    filter(md_parse_ok == TRUE, inout_parse_ok == TRUE) %>%
+df_clean <- df_qwen %>%
+    filter(toupper(as.character(md_parse_ok)) == "TRUE",
+           toupper(as.character(inout_parse_ok)) == "TRUE") %>%
     filter(if_all(all_of(c(md_cols, inout_cols)), ~ !is.na(.)))
 
 cat(sprintf("Rows after filtering: %d of %d (dropped %d)\n",
-            nrow(df_clean), nrow(df_gpt), nrow(df_gpt) - nrow(df_clean)))
+            nrow(df_clean), nrow(df_qwen), nrow(df_qwen) - nrow(df_clean)))
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SECTION 1: Factor Analysis
@@ -181,7 +182,8 @@ phi_note <- if (!is.null(fa_md$Phi)) {
 xt_md <- xtable(
     md_full,
     caption = paste0(
-        "Moral Disengagement Factor Loadings (oblimin rotation, ML; $N = 3{,}895$). ",
+        sprintf("Moral Disengagement Factor Loadings (oblimin rotation, ML; $N = %s$). ",
+                format(nrow(df_clean), big.mark = ",")),
         "Loadings $< .30$ are suppressed. ", phi_note
     ),
     label = "tab:fa_md"
@@ -221,7 +223,8 @@ io_full <- rbind(io_body, io_footer)
 
 xt_io <- xtable(
     io_full,
-    caption = "In/Out-Group Factor Loadings (1 factor, ML; $N = 3{,}895$).",
+    caption = sprintf("In/Out-Group Factor Loadings (1 factor, ML; $N = %s$).",
+                      format(nrow(df_clean), big.mark = ",")),
     label   = "tab:fa_inout"
 )
 align(xt_io) <- c("l", "l", "r", "r")
@@ -257,7 +260,7 @@ factor_labels <- c(md_F1 = "MD Factor 1", md_F2 = "MD Factor 2", inout_F1 = "In/
 
 # ── Aggregate by character × episode (panel data for regression) ─────────────
 agg_panel <- df_scored %>%
-    group_by(character, season, episode, title, airdate, rating) %>%
+    group_by(character, season, episode, title, airdate) %>%
     summarise(
         n_lines = n(),
         across(all_of(all_score_names), ~ mean(., na.rm = TRUE), .names = "{.col}_mean"),
@@ -270,8 +273,8 @@ agg_panel <- df_scored %>%
         season_f = factor(paste0("Season ", season), levels = paste0("Season ", 1:4))
     )
 
-write_csv(agg_panel, "./data/AoT_gpt_data.csv")
-cat(sprintf("\nPanel dataset: %d rows (%d character-episode observations) written to ./data/agg_panel_scores.csv\n",
+write_csv(agg_panel, "./data/AoT_qwen_data.csv")
+cat(sprintf("\nPanel dataset: %d rows (%d character-episode observations) written to ./data/AoT_qwen_data.csv\n",
             nrow(agg_panel), nrow(agg_panel)))
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -350,20 +353,31 @@ char_long <- df_scored %>%
         character  = fct_reorder(character, score, .fun = median, .desc = TRUE)
     )
 
-p3 <- ggplot(char_long, aes(x = score, y = character)) +
-    geom_boxplot(
-        fill         = col_primary,
-        color        = "grey20",
-        outlier.size  = 0.4,
-        outlier.alpha = 0.3,
-        width        = 0.65,
-        alpha        = 0.75,
-        linewidth    = 0.3
-    ) +
-    facet_wrap(~ factor_lbl, ncol = 2, scales = "free_x") +
-    # ggtitle("Factor Score Distributions by Character") +
-    labs(x = "Factor Score", y = NULL) +
-    theme_journal()
+# Build one panel per factor, then compose: top row [F1 | F2], bottom row [_ F3 _]
+make_char_panel <- function(lbl) {
+    ggplot(char_long %>% filter(factor_lbl == lbl),
+           aes(x = score, y = character)) +
+        geom_boxplot(
+            fill          = col_primary,
+            color         = "grey20",
+            outlier.size  = 0.4,
+            outlier.alpha = 0.3,
+            width         = 0.65,
+            alpha         = 0.75,
+            linewidth     = 0.3
+        ) +
+        # ggtitle(lbl) +
+        labs(x = "Factor Score", y = NULL, subtitle = lbl) +
+        theme_journal() +
+        theme(plot.subtitle = element_text(face = "bold", size = 9.5, hjust = 0.5))
+}
+
+p3a <- make_char_panel("MD Factor 1")
+p3b <- make_char_panel("MD Factor 2")
+p3c <- make_char_panel("In/Out Factor")
+
+# "AABB / #CC#": 4-column grid; F1 and F2 fill top row, F3 centered in bottom row
+p3 <- wrap_plots(p3a, p3b, p3c, design = "AABB\n#CC#")
 
 save_fig(p3, "fig3_factor_scores_by_character", 9, 7)
 
@@ -375,12 +389,8 @@ p99_len   <- quantile(df_gpt$line_length, 0.99, na.rm = TRUE)
 p4 <- ggplot(df_gpt, aes(x = line_length)) +
     geom_histogram(fill = col_primary, color = "white",
                    bins = 55, linewidth = 0.15) +
-    geom_vline(xintercept = med_len,
-               color = col_secondary, linetype = "dashed", linewidth = 0.8) +
-    annotate("text",
-             x = med_len + 15, y = Inf, vjust = 1.7, hjust = 0,
-             size = 3, color = col_secondary,
-             label = sprintf("Median = %d chars", as.integer(med_len))) +
+    # geom_vline(xintercept = med_len,
+               # color = col_secondary, linetype = "dashed", linewidth = 0.8) +
     scale_x_continuous(limits  = c(0, p99_len),
                        expand  = expansion(mult = c(0, 0.02))) +
     scale_y_continuous(expand  = expansion(mult = c(0, 0.05))) +
@@ -472,15 +482,15 @@ p7 <- ggplot(scree_df, aes(x = component, y = eigenvalue,
     geom_line(linewidth = 0.7) +
     geom_point(size = 2.5) +
     scale_color_manual(
-        values = c(Observed = col_primary, Simulated = col_secondary),
+        values = c(Observed = col_primary),
         name   = NULL
     ) +
     scale_linetype_manual(
-        values = c(Observed = "solid", Simulated = "dashed"),
+        values = c(Observed = "solid"),
         name   = NULL
     ) +
     scale_shape_manual(
-        values = c(Observed = 19, Simulated = 17),
+        values = c(Observed = 19),
         name   = NULL
     ) +
     scale_x_continuous(breaks = seq_along(pa_md$fa.values)) +
