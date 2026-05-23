@@ -13,3 +13,7 @@ data/aot_qwen_labeled.csv
 
 # Jupyter Notebook checkpoints
 *.ipynb
+.Rproj.user
+.Rhistory
+.RData
+SCISS.Rproj
