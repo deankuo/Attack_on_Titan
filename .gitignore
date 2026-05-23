@@ -10,6 +10,7 @@ data/raw/aot_comments.csv
 data/aot_comments_classified.csv
 data/aot_gpt_mini_labeled.csv
 data/aot_qwen_labeled.csv
+data/aot_qwen_labeled_40.csv
 
 # Jupyter Notebook checkpoints
 *.ipynb
