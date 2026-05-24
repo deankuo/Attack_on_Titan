@@ -11,6 +11,7 @@ data/aot_comments_classified.csv
 data/aot_gpt_mini_labeled.csv
 data/aot_qwen_labeled.csv
 data/aot_qwen_labeled_40.csv
+reddit_scraper/comments_by_episode.csv
 
 # Jupyter Notebook checkpoints
 *.ipynb
