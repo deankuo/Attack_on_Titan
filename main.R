@@ -1,5 +1,5 @@
 ### 05.23.2026
-### Factor analysis of AoT Qwen labeled data
+### Factor analysis of AoT GPT labeled data
 ### MD (8 indicators) + In/Out (3 indicators) FA; character/episode aggregation
 
 suppressPackageStartupMessages({
@@ -52,7 +52,7 @@ md_cols <- c(
     "md_advantageous_comparison_score",
     "md_displacement_of_responsibility_score",
     "md_diffusion_of_responsibility_score",
-    "md_disregard_distortion_of_consequences_score",
+    "md_disregard___distortion_of_consequences_score",
     "md_dehumanization_score",
     "md_attribution_of_blame_score"
 )
@@ -83,13 +83,13 @@ df_qwen     <- read_csv("./data/aot_qwen_labeled.csv",        show_col_types = F
 df_comments <- read_csv("./data/aot_comments_classified.csv", show_col_types = FALSE)
 
 # ── Filter to successfully parsed rows with no NA scores ──────────────────────
-df_clean <- df_qwen %>%
+df_clean <- df_gpt %>%
     filter(toupper(as.character(md_parse_ok)) == "TRUE",
            toupper(as.character(inout_parse_ok)) == "TRUE") %>%
     filter(if_all(all_of(c(md_cols, inout_cols)), ~ !is.na(.)))
 
 cat(sprintf("Rows after filtering: %d of %d (dropped %d)\n",
-            nrow(df_clean), nrow(df_qwen), nrow(df_qwen) - nrow(df_clean)))
+            nrow(df_clean), nrow(df_gpt), nrow(df_gpt) - nrow(df_clean)))
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SECTION 1: Factor Analysis
@@ -273,8 +273,8 @@ agg_panel <- df_scored %>%
         season_f = factor(paste0("Season ", season), levels = paste0("Season ", 1:4))
     )
 
-write_csv(agg_panel, "./data/AoT_qwen_data.csv")
-cat(sprintf("\nPanel dataset: %d rows (%d character-episode observations) written to ./data/AoT_qwen_data.csv\n",
+write_csv(agg_panel, "./data/AoT_gpt_data.csv")
+cat(sprintf("\nPanel dataset: %d rows (%d character-episode observations) written to ./data/AoT_gpt_data.csv\n",
             nrow(agg_panel), nrow(agg_panel)))
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -376,10 +376,12 @@ p3a <- make_char_panel("MD Factor 1")
 p3b <- make_char_panel("MD Factor 2")
 p3c <- make_char_panel("In/Out Factor")
 
-# "AABB / #CC#": 4-column grid; F1 and F2 fill top row, F3 centered in bottom row
-p3 <- wrap_plots(p3a, p3b, p3c, design = "AABB\n#CC#")
+# Fig 3a: MD — 1-row × 2-column, one dimension per panel
+p3_md <- wrap_plots(p3a, p3b, ncol = 2)
+save_fig(p3_md, "fig3a_md_factor_scores_by_character", 10, 7)
 
-save_fig(p3, "fig3_factor_scores_by_character", 9, 7)
+# Fig 3b: In/Out — single panel
+save_fig(p3c, "fig3b_inout_factor_scores_by_character", 5, 7)
 
 # ── Fig 4: Transcript line length distribution ────────────────────────────────
 df_gpt    <- df_gpt %>% mutate(line_length = nchar(sentence))
@@ -505,4 +507,13 @@ p7 <- ggplot(scree_df, aes(x = component, y = eigenvalue,
 
 save_fig(p7, "fig7_scree_plot_parallel_analysis", 6, 4)
 
-cat("\nAll 7 figures saved to ./figures/\n")
+cat("\nAll 8 figures saved to ./figures/\n")
+
+df <- read_csv("./data/AoT_gpt_data.csv")
+pixis <- df %>%
+    filter(character == "Floch Forster")
+
+pixis <- df_gpt %>%
+    filter(season == 4, 
+           episode == 27,
+           character == "Floch Forster")
