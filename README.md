@@ -1,6 +1,6 @@
-# Moral Disengagement and In/Out-Group Rhetoric in *Attack on Titan*
+# You In or Out? Character Rhetoric and Audience Response in *Attack on Titan*
 
-A computational text-analysis pipeline that extracts, labels, and scores all 88 episodes of the anime *Attack on Titan* for moral disengagement strategies and in/out-group rhetoric, using large language models and psychometric factor analysis.
+A computational text-analysis pipeline that extracts, labels, and scores all 89 episodes of the anime *Attack on Titan* for moral disengagement strategies and in/out-group rhetoric, using large language models and psychometric factor analysis.
 
 ---
 
