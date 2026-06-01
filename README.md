@@ -12,6 +12,35 @@ A parallel corpus of Reddit audience comments is processed through the same emot
 
 ---
 
+## Pipeline Overview
+
+```mermaid
+flowchart TD
+    WEB["Springfield Springfield\nWebsite"]
+    TVMAZE["TVmaze API\n(no key required)"]
+    REDDIT["Reddit Comments"]
+
+    WEB -->|"requests + BeautifulSoup"| S1["Step 1 — Scrape Transcripts\nscrapping.py"]
+    S1 -->|"aot_transcripts_raw.csv\ntranscript/s##e##.txt"| S2["Step 2 — Fetch Metadata\nfetch_metadata.py"]
+    TVMAZE --> S2
+
+    S2 -->|"aot.csv (transcripts + metadata)"| S3["Step 3 — Character Attribution\nlabel_gemini.py\nGemini 2.5 Pro Batch API"]
+
+    S3 -->|"aot_labeled.csv (~20 500 rows)\n→ filter → aot_labeled_filtered.csv"| S4A["Step 4a — GPT Scoring\nlabel_gpt_mini.py\nlocal / cloud"]
+    S3 --> S4B["Step 4b — Qwen2.5-32B Scoring\nlabel_qwen_vllm.py\nTACC / vLLM"]
+
+    S4A -->|"aot_gpt_mini_labeled.csv\n8 400 rows × 11 scores"| S5["Step 5 — Emotion & Sentiment\nclassify.py\nHuggingFace / TACC A100"]
+    REDDIT --> S5
+
+    S5 -->|"aot_classified.csv\naot_comments_classified.csv"| S6["Step 6 — Factor Analysis & Visualization\nmain.R"]
+
+    S6 --> FIG["figures/\npublication-ready PNGs"]
+    S6 --> TAB["tables/\nLaTeX tables"]
+    S6 --> PAN["AoT_gpt_data.csv\ncharacter × episode panel"]
+```
+
+---
+
 ## Repository Layout
 
 ```
@@ -325,11 +354,3 @@ Conda environment: **llm**
 Emotion/sentiment classification and Qwen2.5-32B scoring are run on [TACC](https://www.tacc.utexas.edu/) GPU nodes via SLURM. The provided `run_classify.sh` and `run_label.sh` scripts are configured for TACC Lonestar6 (`gpu-a100` partition). Adjust `--account` and `--partition` before submitting.
 
 GPT scoring (`label_gpt_mini.py`) runs locally or on any machine with internet access; concurrent threads (`--workers`) are throttled by your OpenAI rate limits.
-
----
-
-## References
-
-Bandura, A. (1999). Moral disengagement in the perpetration of inhumanities. *Personality and Social Psychology Review*, 3(3), 193–209.
-
-Tajfel, H., & Turner, J. C. (1979). An integrative theory of intergroup conflict. In W. G. Austin & S. Worchel (Eds.), *The social psychology of intergroup relations* (pp. 33–47). Brooks/Cole.
